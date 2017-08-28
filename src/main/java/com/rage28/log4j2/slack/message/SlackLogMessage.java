@@ -4,7 +4,7 @@ import com.rage28.log4j2.slack.model.SlackLog;
 import org.apache.logging.log4j.message.Message;
 
 import java.time.Instant;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.Locale;
@@ -12,8 +12,8 @@ import java.util.Locale;
 public class SlackLogMessage implements Message, ISlackLogMessage {
 	private final SlackLog log;
 	private final DateTimeFormatter df = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)
-		.withLocale(Locale.ENGLISH)
-		.withZone(ZoneId.of("Asia/Kolkata"));
+		.withLocale(Locale.getDefault())
+		.withZone(ZoneOffset.systemDefault());
 
 	public SlackLogMessage(SlackLog log) {
 		this.log = log;

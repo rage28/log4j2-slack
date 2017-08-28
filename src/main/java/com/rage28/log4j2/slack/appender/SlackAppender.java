@@ -22,7 +22,7 @@ import java.util.Collections;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-@Plugin(name = "SlackAppender", category = Core.CATEGORY_NAME, elementType = Appender.ELEMENT_TYPE, printObject = true)
+@Plugin(name = "Slack", category = Core.CATEGORY_NAME, elementType = Appender.ELEMENT_TYPE, printObject = true)
 public class SlackAppender extends AbstractAppender {
 	private static final Slack slack = Slack.getInstance();
 	private final String webhookUrl;
@@ -81,18 +81,18 @@ public class SlackAppender extends AbstractAppender {
 		switch (level.name()) {
 			case "TRACE":
 			case "DEBUG":
-				return "blue";
+				return "#67a0fc";
 
 			case "WARN":
-				return "yellow";
+				return "warning";
 
 			case "ERROR":
 			case "FATAL":
-				return "red";
+				return "danger";
 
 			case "INFO":
 			default:
-				return "black";
+				return "good";
 		}
 	}
 
