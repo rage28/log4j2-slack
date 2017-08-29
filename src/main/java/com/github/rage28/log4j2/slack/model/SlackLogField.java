@@ -1,4 +1,4 @@
-package com.rage28.log4j2.slack.model;
+package com.github.rage28.log4j2.slack.model;
 
 public class SlackLogField {
 	private String title;

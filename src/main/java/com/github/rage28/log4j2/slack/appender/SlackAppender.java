@@ -1,11 +1,11 @@
-package com.rage28.log4j2.slack.appender;
+package com.github.rage28.log4j2.slack.appender;
 
+import com.github.rage28.log4j2.slack.message.SlackLogMessage;
+import com.github.rage28.log4j2.slack.model.SlackLog;
 import com.github.seratch.jslack.Slack;
 import com.github.seratch.jslack.api.model.Attachment;
 import com.github.seratch.jslack.api.model.Field;
 import com.github.seratch.jslack.api.webhook.Payload;
-import com.rage28.log4j2.slack.message.SlackLogMessage;
-import com.rage28.log4j2.slack.model.SlackLog;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.*;
 import org.apache.logging.log4j.core.appender.AbstractAppender;

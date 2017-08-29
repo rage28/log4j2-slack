@@ -1,6 +1,6 @@
-package com.rage28.log4j2.slack.message;
+package com.github.rage28.log4j2.slack.message;
 
-import com.rage28.log4j2.slack.model.SlackLog;
+import com.github.rage28.log4j2.slack.model.SlackLog;
 import org.apache.logging.log4j.message.Message;
 
 import java.time.Instant;

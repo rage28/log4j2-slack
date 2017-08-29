@@ -1,4 +1,4 @@
-package com.rage28.log4j2.slack.model;
+package com.github.rage28.log4j2.slack.model;
 
 import java.util.List;
 
