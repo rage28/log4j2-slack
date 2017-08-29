@@ -1,4 +1,4 @@
-group 'com.rage28.log4j2'
+group 'com.github.rage28'
 version '1.0'
 
 apply plugin: 'java'
