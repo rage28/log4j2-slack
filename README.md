@@ -7,14 +7,14 @@ This is a highly customizable appender for [Apache SLF4J2](https://logging.apach
 Gradle
 ```groovy
     dependencies {
-        compile 'com.rage28.log4j2:slack-appender:1.0'
+        compile 'com.github.rage28:log4j2-slack:1.0'
     }
 ```
 Maven
 ```xml
     <dependency>
-        <groupId>com.rage28.log4j2</groupId>
-        <artifactId>slack-appender</artifactId>
+        <groupId>com.github.rage28</groupId>
+        <artifactId>log4j2-slack</artifactId>
         <version>1.0</version>
     </dependency>
 ```
@@ -44,8 +44,8 @@ Example
 ```
 
 ```java
-import com.rage28.log4j2.slack.message.SlackLogMessage;
-import com.rage28.log4j2.slack.model.SlackLog.SlackLogBuilder;
+import com.github.rage28.log4j2.slack.message.SlackLogMessage;
+import com.github.rage28.log4j2.slack.model.SlackLog.SlackLogBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
