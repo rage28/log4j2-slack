@@ -1,7 +1,7 @@
 buildscript {
     ext {
         pomFile = file("$project.buildDir/generated-pom.xml")
-        isReleaseVersion = !(project.version =~ /-SNAPSHOT$/)
+        isReleaseVersion = !(projectVersion =~ /-SNAPSHOT$/)
     }
 
     repositories {
@@ -99,9 +99,27 @@ model {
     tasks.publishMavenJavaPublicationToMavenLocalRepository {
         dependsOn(project.tasks.signArchives)
     }
+    tasks.publishMavenJavaPublicationToMavenRepository {
+        dependsOn(project.tasks.signArchives)
+    }
 }
 
 publishing {
+    repositories {
+        mavenLocal()
+        maven {
+            if (project.ext.isReleaseVersion) {
+                url 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+            } else {
+                url 'https://oss.sonatype.org/content/repositories/snapshots/'
+            }
+
+            credentials {
+                username = project.properties.ossrhUsername
+                password = project.properties.ossrhPassword
+            }
+        }
+    }
     publications {
         mavenJava(MavenPublication) {
             groupId projectGroupId
@@ -113,8 +131,7 @@ publishing {
             artifact sourcesJar
             artifact javadocJar
 
-            // Signing the artifacts
-            // Sign the pom.xml and artifacts.
+            // Sign the pom.xml
             if (signing.required) {
                 // Sign the pom.xml.
                 pom.withXml {
@@ -141,8 +158,5 @@ publishing {
                 }
             }
         }
-    }
-    repositories {
-        mavenLocal()
     }
 }
