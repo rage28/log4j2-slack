@@ -1,11 +1,26 @@
-group 'com.github.rage28'
-version '1.0'
+buildscript {
+    ext {
+        pomFile = file("$project.buildDir/generated-pom.xml")
+        isReleaseVersion = !(project.version =~ /-SNAPSHOT$/)
+    }
+
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath "ru.vyarus:gradle-pom-plugin:$gradlePomPluginVersion"
+    }
+}
+
+group projectGroupId
+version projectVersion
 
 apply plugin: 'java'
-apply plugin: 'maven'
-apply plugin: 'maven-publish'
+apply plugin: 'signing'
+apply plugin: 'ru.vyarus.pom'
 
-sourceCompatibility = 1.8
+sourceCompatibility = javaVersionNumber
 
 repositories {
     jcenter()
@@ -13,32 +28,121 @@ repositories {
 }
 
 dependencies {
-    compile 'org.apache.logging.log4j:log4j-core:2.8.2'
-    compile 'com.squareup.okhttp3:okhttp:3.8.1'
-    compile 'com.google.code.gson:gson:2.8.1'
-    compile('com.github.seratch:jslack:1.0.12') {
+    compile "org.apache.logging.log4j:log4j-core:$log4j2Version"
+    compile "com.squareup.okhttp3:okhttp:$okHttpVersion"
+    compile "com.google.code.gson:gson:$gsonVersion"
+    compile("com.github.seratch:jslack:$jslackVersion") {
         exclude group: 'com.google.code.gson', module: 'gson'
         exclude group: 'com.squareup.okhttp3', module: 'okhttp'
+    }
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+pom {
+    name 'Log4j2 Slack Appender'
+    description 'This is a highly customizable appender for Apache SLF4J2 to push the logs to Slack using webhooks'
+    licenses {
+        license {
+            name 'Apache License, Version 2.0'
+            url 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+            distribution 'repo'
+        }
+    }
+    scm {
+        url 'https://github.com/rage28/log4j2-slack'
+        connection 'scm:git@github.com:rage28/log4j2-slack.git'
+        developerConnection 'scm:git@github.com:rage28/log4j2-slack.git'
+    }
+    developers {
+        developer {
+            id "rage28"
+            name "Raghavendra Bhuvan"
+            email "rage28@gmail.com"
+            roles {
+                role 'Developer'
+            }
+        }
+    }
+}
+
+signing {
+    required { signatory != null && project.ext.isReleaseVersion }
+    sign configurations.archives
+}
+
+artifacts {
+    archives jar
+    archives javadocJar
+    archives sourcesJar
+}
+
+tasks.withType(Jar) {
+    from(project.projectDir) {
+        include 'LICENSE.md'
+        into 'META-INF'
+    }
+}
+
+model {
+    tasks.publishMavenJavaPublicationToMavenLocal {
+        dependsOn(project.tasks.signArchives)
+    }
+    tasks.publishMavenJavaPublicationToMavenLocalRepository {
+        dependsOn(project.tasks.signArchives)
     }
 }
 
 publishing {
     publications {
         mavenJava(MavenPublication) {
+            groupId projectGroupId
+            artifactId rootProject.name
+            version projectVersion
+
             from components.java
 
-            artifact sourceJar
-            artifact packageJavadoc
+            artifact sourcesJar
+            artifact javadocJar
+
+            // Signing the artifacts
+            // Sign the pom.xml and artifacts.
+            if (signing.required) {
+                // Sign the pom.xml.
+                pom.withXml {
+                    writeTo(project.ext.pomFile)
+                    def pomAscFile = signing.sign(project.ext.pomFile).signatureFiles[0]
+                    artifact(pomAscFile) {
+                        classifier = null
+                        extension = 'pom.asc'
+                    }
+                    project.ext.pomFile.delete()
+                }
+
+                // Sign the artifacts.
+                project.tasks.signArchives.signatureFiles.each {
+                    artifact(it) {
+                        def matcher = it.file =~ /-(sources|javadoc)\.jar\.asc$/
+                        if (matcher.find()) {
+                            classifier = matcher.group(1)
+                        } else {
+                            classifier = null
+                        }
+                        extension = 'jar.asc'
+                    }
+                }
+            }
         }
     }
-}
-
-task sourceJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allJava
-}
-
-task packageJavadoc(type: Jar) {
-    from javadoc
-    classifier = 'javadoc'
+    repositories {
+        mavenLocal()
+    }
 }
