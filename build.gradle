@@ -1,26 +1,18 @@
-buildscript {
-    ext {
-        pomFile = file("$project.buildDir/generated-pom.xml")
-        isReleaseVersion = !(projectVersion =~ /-SNAPSHOT$/)
-    }
-
-    repositories {
-        jcenter()
-    }
-
-    dependencies {
-        classpath "ru.vyarus:gradle-pom-plugin:$gradlePomPluginVersion"
-    }
+plugins {
+    id 'ru.vyarus.pom' version '1.2.0'
+    id 'com.jfrog.bintray' version '1.7.3'
 }
+
+apply plugin: 'java'
 
 group projectGroupId
 version projectVersion
 
-apply plugin: 'java'
-apply plugin: 'signing'
-apply plugin: 'ru.vyarus.pom'
-
 sourceCompatibility = javaVersionNumber
+
+ext {
+    isReleaseVersion = !(projectVersion =~ /-SNAPSHOT$/)
+}
 
 repositories {
     jcenter()
@@ -37,14 +29,24 @@ dependencies {
     }
 }
 
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
+task sourceJar(type: Jar, dependsOn: classes) {
     from sourceSets.main.allSource
+    classifier 'sources'
+    extension 'jar'
+    group 'build'
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
     from javadoc.destinationDir
+    classifier 'javadoc'
+    extension 'jar'
+    group 'build'
+}
+
+artifacts {
+    archives jar
+    archives javadocJar
+    archives sourceJar
 }
 
 pom {
@@ -74,88 +76,62 @@ pom {
     }
 }
 
-signing {
-    required { signatory != null && project.ext.isReleaseVersion }
-    sign configurations.archives
-}
-
-artifacts {
-    archives jar
-    archives javadocJar
-    archives sourcesJar
-}
-
-tasks.withType(Jar) {
-    from(project.projectDir) {
-        include 'LICENSE.md'
-        into 'META-INF'
-    }
-}
-
-model {
-    tasks.publishMavenJavaPublicationToMavenLocal {
-        dependsOn(project.tasks.signArchives)
-    }
-    tasks.publishMavenJavaPublicationToMavenLocalRepository {
-        dependsOn(project.tasks.signArchives)
-    }
-    tasks.publishMavenJavaPublicationToMavenRepository {
-        dependsOn(project.tasks.signArchives)
-    }
-}
-
 publishing {
     repositories {
         mavenLocal()
-        maven {
-            if (project.ext.isReleaseVersion) {
-                url 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
-            } else {
-                url 'https://oss.sonatype.org/content/repositories/snapshots/'
-            }
-
-            credentials {
-                username = project.properties.ossrhUsername
-                password = project.properties.ossrhPassword
-            }
-        }
+        jcenter()
     }
     publications {
-        mavenJava(MavenPublication) {
+        jar(MavenPublication) {
+            from components.java
+
+            artifact sourceJar
+            artifact javadocJar
+
             groupId projectGroupId
             artifactId rootProject.name
             version projectVersion
+        }
+    }
+}
 
-            from components.java
+bintray {
+    user = "$bintrayUser"
+    key = "$bintrayApikey"
+    publications = ['jar']
 
-            artifact sourcesJar
-            artifact javadocJar
+    pkg {
+        repo = 'java'
+        name = 'log4j2-slack'
+        desc = 'A highly customizable appender for Apache SLF4J2 to push the logs to Slack using webhooks'
 
-            // Sign the pom.xml
-            if (signing.required) {
-                // Sign the pom.xml.
-                pom.withXml {
-                    writeTo(project.ext.pomFile)
-                    def pomAscFile = signing.sign(project.ext.pomFile).signatureFiles[0]
-                    artifact(pomAscFile) {
-                        classifier = null
-                        extension = 'pom.asc'
-                    }
-                    project.ext.pomFile.delete()
-                }
+        websiteUrl = 'https://github.com/rage28/log4j2-slack'
+        issueTrackerUrl = 'https://github.com/rage28/log4j2-slack/issues'
+        vcsUrl = 'https://github.com/rage28/log4j2-slack.git'
 
-                // Sign the artifacts.
-                project.tasks.signArchives.signatureFiles.each {
-                    artifact(it) {
-                        def matcher = it.file =~ /-(sources|javadoc)\.jar\.asc$/
-                        if (matcher.find()) {
-                            classifier = matcher.group(1)
-                        } else {
-                            classifier = null
-                        }
-                        extension = 'jar.asc'
-                    }
-                }
+        licenses = ['Apache-2.0']
+        labels = ['log4j2', 'slack', 'slf4j']
+
+        publicDownloadNumbers = true
+
+        githubRepo = 'rage28/log4j2-slack'
+        githubReleaseNotesFile = 'README.md'
+
+        version {
+            name = "$projectVersion"
+            vcsTag = "$projectVersion"
+            released = new Date()
+
+            gpg {
+                sign = true
+                passphrase = "$bintrayGpgPassword"
+            }
+
+            mavenCentralSync {
+                sync = false
+                user = "$ossrhUsername"
+                password = "$ossrhPassword"
+                close = '1'
             }
         }
     }
