@@ -52,6 +52,7 @@ artifacts {
 pom {
     name 'Log4j2 Slack Appender'
     description 'This is a highly customizable appender for Apache SLF4J2 to push the logs to Slack using webhooks'
+    url 'https://github.com/rage28/log4j2-slack'
     licenses {
         license {
             name 'Apache License, Version 2.0'
@@ -128,9 +129,9 @@ bintray {
             }
 
             mavenCentralSync {
-                sync = false
-                user = "$ossrhUsername"
-                password = "$ossrhPassword"
+                sync = true
+                user = "$ossrhUserTokenKey"
+                password = "$ossrhUserTokenPassword"
                 close = '1'
             }
         }
